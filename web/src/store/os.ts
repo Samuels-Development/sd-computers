@@ -1,16 +1,11 @@
 import { create } from 'zustand';
-import type { AppId, OpenPayload, Theme } from '@/types';
+import type { AppId, OpenPayload, Theme, DesktopPosition } from '@/types';
+import { t } from '@/i18n';
+import { useQuickSettings } from './quickSettings';
 import { rpc } from '@/nui/rpc';
 
-/**
- * The whole OS in one store: the boot payload, which screen we're on (boot -> lock -> welcome ->
- * desktop -> shutdown), personalisation, the window manager, the shell's flyouts and the toast
- * queue. Windows live here (not in a component hook) so any app can open/focus another app's
- * window - e.g. a new-mail toast opening Mail.
- */
-
 export type Phase = 'off' | 'boot' | 'lock' | 'welcome' | 'desktop' | 'shutdown';
-/** What a window can be: an installed app, a hack run (Command Prompt opens those) or one of the games (the Games shelf opens those). */
+
 export type WinApp = AppId | 'hack' | 'mines' | 'solitaire' | 'snake';
 
 export interface Win {
@@ -24,9 +19,9 @@ export interface Win {
   min: boolean;
   max: boolean;
   z: number;
-  /** Pending exit animation: the frame stays mounted while it plays, then finalize() tears down. */
+
   exit?: 'close' | 'min';
-  /** Free-form props for the app component (hack windows carry their run here). */
+
   props?: Record<string, unknown>;
   resizable: boolean;
 }
@@ -36,10 +31,14 @@ export interface Toast {
   app: WinApp | 'system';
   title: string;
   body?: string;
+  createdAt?: number;
   onClick?: () => void;
 }
 
 export interface Settings {
+  desktopHidden: Record<string, boolean>;
+  desktopPositions: Record<string, DesktopPosition>;
+  taskbarPins: Record<string, boolean>;
   theme: Theme;
   wallpaper: string;
   accent: string;
@@ -61,10 +60,12 @@ interface OSState {
   settings: Settings;
   windows: Win[];
   start: boolean;
-  flyout: 'calendar' | 'quick' | null;
+  flyout: 'calendar' | 'notifications' | 'quick' | null;
   toasts: Toast[];
+  notifications: Toast[];
+  unreadNotifications: number;
   recent: { app: AppId; at: number }[];
-  /** The counts on custom apps' icons (taskbar, dock, desktop), by desktop id. */
+
   badges: Record<string, number>;
 
   bootWith: (p: OpenPayload) => void;
@@ -72,6 +73,10 @@ interface OSState {
   reset: () => void;
   setApps: (lists: Pick<OpenPayload['computer'], 'apps' | 'pinned' | 'desktopIcons' | 'badges'>) => void;
   setBadge: (app: string, count: number) => void;
+  desktopSaving: boolean;
+  saveDesktop: (patch: Partial<Pick<Settings, 'desktopHidden' | 'desktopPositions'>>) => Promise<boolean>;
+  taskbarSaving: boolean;
+  setTaskbarPinned: (app: AppId, pinned: boolean) => Promise<void>;
   updateSettings: (patch: Partial<Settings>, persist?: boolean) => void;
 
   openApp: (app: AppId, props?: Record<string, unknown>) => void;
@@ -89,53 +94,49 @@ interface OSState {
   retitle: (id: string, title: string) => void;
 
   setStart: (open: boolean) => void;
-  setFlyout: (f: 'calendar' | 'quick' | null) => void;
+  setFlyout: (f: 'calendar' | 'notifications' | 'quick' | null) => void;
   toast: (t: Omit<Toast, 'id'>) => void;
   dismissToast: (id: number) => void;
+  dismissNotification: (id: number) => void;
+  clearNotifications: () => void;
 }
 
-/** Taskbar height - the desktop's usable area stops above it. */
 export const TASKBAR_H = 48;
 
 let boundsProvider: (() => { w: number; h: number }) | null = null;
 
-/**
- * Let a shell report its own desktop area (retro: the CRT tube; mac: between menu bar and dock).
- * Window placement, clamping and dragging all use it. null = the default below.
- */
 export const setBoundsProvider = (fn: (() => { w: number; h: number }) | null): void => {
   boundsProvider = fn;
 };
 
-/** The area windows live in: the shell's provider, else viewport minus the modern taskbar. */
 export const desktopBounds = (): { w: number; h: number } =>
   boundsProvider ? boundsProvider() : { w: window.innerWidth, h: window.innerHeight - TASKBAR_H };
 
 let zCounter = 10;
 let spawnCount = 0;
 let toastSeq = 0;
+let sessionGeneration = 0;
 
-/** Window id -> "may this window close?" check (Notepad's unsaved-changes prompt). */
 const closeGuards = new Map<string, () => boolean>();
 
-/**
- * Register (or clear, with null) a close guard for a window. When the user closes the window, the
- * guard runs first; returning false vetoes the close - the app then shows its own prompt and calls
- * close() again once it's resolved. Sign out / shut down tear windows down without asking, like
- * Windows does on a forced logoff.
- */
 export const setCloseGuard = (id: string, guard: (() => boolean) | null): void => {
   if (guard) closeGuards.set(id, guard);
   else closeGuards.delete(id);
 };
 
+export const taskbarPins = (p: OpenPayload, overrides: Record<string, boolean>): AppId[] =>
+  [...new Set([...p.computer.pinned, ...p.computer.apps.filter(a => overrides[a.id] === true).map(a => a.id)])]
+    .filter(id => overrides[id] !== false && p.computer.apps.some(a => a.id === id));
+
 const defaults = (p: OpenPayload | null): Settings => ({
+  desktopHidden: p?.settings.desktopHidden ?? {},
+  desktopPositions: p?.settings.desktopPositions ?? {},
+  taskbarPins: p?.settings.taskbarPins ?? {},
   theme: p?.settings.theme ?? p?.desktop.defaultTheme ?? 'dark',
   wallpaper: p?.settings.wallpaper ?? p?.desktop.defaultWallpaper ?? 'petals-dark',
   accent: p?.settings.accent ?? p?.desktop.accents[0] ?? '#4cc2ff',
 });
 
-/** Where a new window lands: cascaded from the top-left third, clamped inside the desktop. */
 const place = (w: number, h: number): { x: number; y: number; w: number; h: number } => {
   const b = desktopBounds();
   const n = spawnCount++ % 7;
@@ -154,19 +155,28 @@ const place = (w: number, h: number): { x: number; y: number; w: number; h: numb
 export const useOS = create<OSState>((set, get) => ({
   payload: null,
   phase: 'off',
+  taskbarSaving: false,
+  desktopSaving: false,
   settings: defaults(null),
   windows: [],
   start: false,
   flyout: null,
   toasts: [],
+  notifications: [],
+  unreadNotifications: 0,
   recent: [],
   badges: {},
 
   bootWith: p => {
+    sessionGeneration++;
     spawnCount = 0;
     closeGuards.clear();
     set({
       payload: p,
+      taskbarSaving: false,
+      desktopSaving: false,
+      notifications: [],
+      unreadNotifications: 0,
       phase: p.desktop.boot ? 'boot' : 'lock',
       settings: defaults(p),
       windows: [],
@@ -180,19 +190,17 @@ export const useOS = create<OSState>((set, get) => ({
   setPhase: phase => set({ phase, start: false, flyout: null }),
 
   reset: () => {
+    sessionGeneration++;
     closeGuards.clear();
     boundsProvider = null;
-    set({ payload: null, phase: 'off', windows: [], start: false, flyout: null, toasts: [], badges: {} });
+    set({ payload: null, phase: 'off', taskbarSaving: false, desktopSaving: false, notifications: [], unreadNotifications: 0, windows: [], start: false, flyout: null, toasts: [], badges: {} });
   },
 
-  // The server has reworked which apps this session has (a phone was linked to the machine, or
-  // taken off it): the desktop redraws from the new lists, and the windows of apps that are gone
-  // close without asking.
   setApps: lists =>
     set(s => {
       if (!s.payload) return s;
       const has = new Set<string>(lists.apps.map(a => a.id));
-      // (a hack window is Command Prompt's run and stays; a game is the Games shelf's, and goes with it)
+
       const owner = (app: WinApp): string => (app === 'mines' || app === 'solitaire' || app === 'snake' ? 'games' : app);
       const gone = s.windows.filter(w => w.app !== 'hack' && !has.has(owner(w.app)));
       for (const w of gone) closeGuards.delete(w.id);
@@ -211,6 +219,49 @@ export const useOS = create<OSState>((set, get) => ({
       else delete badges[app];
       return { badges };
     }),
+
+  saveDesktop: async patch => {
+    if (get().desktopSaving || get().payload?.computer.style !== 'modern') return false;
+    const generation = sessionGeneration;
+    const previous = Object.fromEntries(Object.keys(patch).map(key => [key, get().settings[key as keyof Settings]]));
+    set(s => ({ desktopSaving: true, settings: { ...s.settings, ...patch } }));
+    try {
+      const res = await rpc('profile:save', { settings: patch });
+      if (generation !== sessionGeneration) return false;
+      if (!res.ok) {
+        set(s => ({ settings: { ...s.settings, ...previous } }));
+        get().toast({ app: 'system', title: res.error ?? t('ui.desktop.save_failed') });
+        return false;
+      }
+      return true;
+    } catch {
+      if (generation === sessionGeneration) {
+        set(s => ({ settings: { ...s.settings, ...previous } }));
+        get().toast({ app: 'system', title: t('ui.desktop.save_failed') });
+      }
+      return false;
+    } finally {
+      if (generation === sessionGeneration) set({ desktopSaving: false });
+    }
+  },
+
+  setTaskbarPinned: async (app, pinned) => {
+    const s = get();
+    if (s.taskbarSaving || !s.payload?.computer.apps.some(a => a.id === app)) return;
+    const pins = { ...s.settings.taskbarPins, [app]: pinned };
+    const generation = sessionGeneration;
+    set({ taskbarSaving: true });
+    try {
+      const res = await rpc('profile:save', { settings: { taskbarPins: pins } });
+      if (sessionGeneration !== generation) return;
+      if (res.ok) set(state => ({ settings: { ...state.settings, taskbarPins: pins } }));
+      else get().toast({ app: 'system', title: res.error ?? t('ui.taskbar.save_failed') });
+    } catch {
+      if (sessionGeneration === generation) get().toast({ app: 'system', title: t('ui.taskbar.save_failed') });
+    } finally {
+      if (sessionGeneration === generation) set({ taskbarSaving: false });
+    }
+  },
 
   updateSettings: (patch, persist = true) => {
     const settings = { ...get().settings, ...patch };
@@ -300,22 +351,28 @@ export const useOS = create<OSState>((set, get) => ({
 
   setStart: open => set({ start: open, flyout: null }),
 
-  setFlyout: f => set({ flyout: f, start: false }),
+  setFlyout: f => set({ flyout: f, start: false, ...(f === 'notifications' || f === 'calendar' ? { unreadNotifications: 0, toasts: [] } : {}) }),
 
   toast: t => {
     const id = ++toastSeq;
-    set(s => ({ toasts: [...s.toasts, { ...t, id }].slice(-4) }));
+    const notification = { ...t, id, createdAt: Date.now() };
+    set(s => ({
+      toasts: s.flyout === 'calendar' || s.flyout === 'notifications' || useQuickSettings.getState().tiles.focus ? s.toasts : [...s.toasts, notification].slice(-3),
+      notifications: [notification, ...s.notifications].slice(0, 50),
+      unreadNotifications: s.flyout === 'calendar' || s.flyout === 'notifications' ? 0 : Math.min(50, s.unreadNotifications + 1),
+    }));
     window.setTimeout(() => get().dismissToast(id), 6500);
   },
 
   dismissToast: id => set(s => ({ toasts: s.toasts.filter(t => t.id !== id) })),
+  dismissNotification: id => set(s => ({
+    notifications: s.notifications.filter(t => t.id !== id),
+    toasts: s.toasts.filter(t => t.id !== id),
+    unreadNotifications: s.unreadNotifications - Number(s.notifications.slice(0, s.unreadNotifications).some(t => t.id === id)),
+  })),
+  clearNotifications: () => set({ notifications: [], toasts: [], unreadNotifications: 0 }),
 }));
 
-/**
- * Ask every window whether the computer may be left, the way closing the window would ask it. The
- * first one that says no (it has unsaved changes, and is now showing its own prompt about them) is
- * brought forward and its id returned. null = nothing is in the way.
- */
 export const leaveBlockedBy = (): string | null => {
   const os = useOS.getState();
   for (const w of os.windows) {
@@ -328,7 +385,6 @@ export const leaveBlockedBy = (): string | null => {
   return null;
 };
 
-/** The id of the focused window: the visible one with the highest z (null = desktop focused). */
 export const selectActiveId = (s: { windows: Win[] }): string | null => {
   let best: Win | null = null;
   for (const w of s.windows) {

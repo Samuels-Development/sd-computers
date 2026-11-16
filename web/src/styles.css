@@ -1,9 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Colour tokens. .os-root carries data-theme; the accent variables are written
-   inline by src/os/theme.ts from the user's accent choice. */
 .os-root,
 .lib-root {
   --success: #6ccb5f;
@@ -89,8 +86,6 @@ body {
 .lib-root input {
   user-select: text;
 }
-
-/* Thin overlay-style scrollbars. */
 .os-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--text-3) transparent;
@@ -115,8 +110,6 @@ body {
 .os-scroll::-webkit-scrollbar-corner {
   background: transparent;
 }
-
-/* The minigames' own log panes use dd-scroll (copied from sd-deaddrop). */
 .dd-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(136, 229, 43, 0.35) transparent;
@@ -128,8 +121,6 @@ body {
   background: rgba(136, 229, 43, 0.3);
   border-radius: 8px;
 }
-
-/* Acrylic surfaces (taskbar, start menu, flyouts). */
 .acrylic {
   background: var(--flyout);
   backdrop-filter: blur(48px) saturate(160%);
@@ -138,19 +129,10 @@ body {
   background: var(--taskbar);
   backdrop-filter: blur(48px) saturate(150%);
 }
-
-/* ── Motion ─────────────────────────────────────────────────────────────── */
-
-/* Things arriving decelerate, things leaving accelerate. */
 :root {
   --ease-out: cubic-bezier(0.1, 0.9, 0.2, 1);
   --ease-in: cubic-bezier(0.7, 0, 1, 0.5);
 }
-
-/* Baseline: every interactive element eases its state changes (hover, press, focus, selection,
-   disabled, theme/accent switches) instead of snapping. :where() keeps it at zero specificity, so
-   any transition-* utility or style rule still wins. Retro opts out: its controls snap, like the
-   era's did. */
 :where(.os-root:not([data-style='retro']), .lib-root)
   :where(button, a, input, textarea, select, label, [role='button'], [role='switch'], [role='menuitem'], [class*='hover:'], [class*='focus:'], [class*='active:'], [class*='ctl-']) {
   transition:
@@ -164,7 +146,6 @@ body {
     outline-color 150ms ease-out,
     transform 150ms var(--ease-out);
 }
-/* Kit buttons give a little under the pointer. */
 :where(.os-root[data-style='modern'], .lib-root) :where(.ctl-btn, .ctl-iconbtn):active {
   transform: scale(0.97);
 }
@@ -191,8 +172,6 @@ body {
 .fade-out {
   animation: fadeOut 250ms ease-in forwards;
 }
-
-/* Windows. */
 @keyframes winOpen {
   from {
     opacity: 0;
@@ -236,7 +215,6 @@ body {
 .win-enter {
   animation: winOpen 180ms var(--ease-out);
 }
-/* Back from the taskbar: the minimize, reversed. */
 .win-restore {
   animation: winRestore 220ms var(--ease-out);
 }
@@ -248,8 +226,6 @@ body {
   animation: winMin 180ms var(--ease-in) forwards;
   pointer-events: none;
 }
-/* Maximize / restore: the frame morphs between the two rects. Only on for the toggle itself -
-   drags and resizes write these same properties every pointermove and must stay 1:1. */
 .win-morph {
   transition:
     left 220ms var(--ease-out),
@@ -259,8 +235,6 @@ body {
     border-radius 220ms var(--ease-out),
     box-shadow 150ms ease-out;
 }
-
-/* Flyouts rising from the taskbar (Start, calendar, quick settings). */
 @keyframes flyUp {
   from {
     opacity: 0;
@@ -280,8 +254,6 @@ body {
 .fly-up {
   animation: flyUp 220ms var(--ease-out);
 }
-
-/* Menus and popovers: grow out of their anchor (pair with an origin-* utility). */
 @keyframes popIn {
   from {
     opacity: 0;
@@ -297,8 +269,6 @@ body {
 .pop-in {
   animation: popIn 150ms var(--ease-out);
 }
-
-/* Content swapped into a pane (a settings page, a tab, the opened message). */
 @keyframes riseIn {
   from {
     opacity: 0;
@@ -308,7 +278,6 @@ body {
 .page-in {
   animation: riseIn 240ms var(--ease-out);
 }
-/* A chat bubble that just arrived or was just sent. */
 @keyframes msgIn {
   from {
     opacity: 0;
@@ -318,7 +287,6 @@ body {
 .msg-in {
   animation: msgIn 260ms var(--ease-out);
 }
-/* A group arriving one after another (desktop icons, cards on a page). */
 .stagger > * {
   animation: riseIn 320ms var(--ease-out) backwards;
 }
@@ -332,8 +300,6 @@ body {
 .stagger > :nth-child(9) { animation-delay: 240ms; }
 .stagger > :nth-child(10) { animation-delay: 270ms; }
 .stagger > :nth-child(n + 11) { animation-delay: 300ms; }
-
-/* Dialogs settle in from slightly oversized, over a fading shade. */
 @keyframes dialogIn {
   from {
     opacity: 0;
@@ -349,8 +315,6 @@ body {
 .dialog-in {
   animation: dialogIn 200ms var(--ease-out);
 }
-
-/* Toasts slide in from the right edge; on the way out they slide back, then the stack closes up. */
 @keyframes toastIn {
   from {
     opacity: 0;
@@ -370,15 +334,12 @@ body {
   100% {
     opacity: 0;
     transform: translateX(56px);
-    /* Its own height plus the stack's gap (8px here; a style with another gap sets --exit-gap). */
     margin-bottom: calc(0px - var(--exit-gap, 8px) - var(--exit-h));
   }
 }
 .toast-in {
   animation: toastIn 260ms var(--ease-out);
 }
-
-/* Taskbar buttons of apps that aren't pinned: the centred row opens up for them (40px + 4px gap). */
 @keyframes taskIn {
   from {
     opacity: 0;
@@ -396,7 +357,6 @@ body {
 .task-in {
   animation: taskIn 220ms var(--ease-out);
 }
-/* The selection pill on a navigation item. */
 @keyframes pillIn {
   from {
     opacity: 0;
@@ -406,8 +366,6 @@ body {
 .pill-in {
   animation: pillIn 180ms var(--ease-out);
 }
-
-/* Calendar flyout: the month grid follows the direction you paged. */
 @keyframes calNext {
   from {
     opacity: 0;
@@ -426,8 +384,6 @@ body {
 .cal-prev {
   animation: calPrev 220ms var(--ease-out);
 }
-
-/* Kit controls that appear mid-task arrive instead of popping (retro and mac restyle their own). */
 :where(.os-root:not([data-style='retro'])) .ctl-dialog {
   animation: dialogIn 200ms var(--ease-out);
 }
@@ -440,11 +396,6 @@ body {
 :where(.os-root:not([data-style='retro'])) .ctl-badge {
   animation: popIn 180ms var(--ease-out);
 }
-
-/* ── Shell phases (modern) ──────────────────────────────────────────────────
-   Computer.tsx keeps the outgoing screen mounted under the incoming one while it fades in
-   (.phase-layer / .phase-in / .phase-out), so boot, lock, welcome, desktop and shutdown dissolve
-   into each other. The rules below are each screen's own choreography on top of that. */
 .phase-layer {
   position: absolute;
   inset: 0;
@@ -468,8 +419,6 @@ body {
 .boot-ring {
   animation: fadeIn 500ms 350ms ease-out backwards;
 }
-
-/* Lock face: the clock drops into place. */
 @keyframes lockFace {
   from {
     opacity: 0;
@@ -479,7 +428,6 @@ body {
 .lock-face {
   animation: lockFace 700ms 80ms var(--ease-out) backwards;
 }
-/* Signed in: the PIN box clears out so only avatar + name carry over into Welcome. */
 .phase-out .lock-actions {
   animation: fadeOut 180ms ease-in forwards;
 }
@@ -488,7 +436,6 @@ body {
 .shutdown-row {
   animation: riseIn 420ms 120ms var(--ease-out) backwards;
 }
-/* Welcome -> desktop: the user lifts away while the wallpaper below comes into focus. */
 @keyframes stageOut {
   to {
     opacity: 0;
@@ -498,8 +445,6 @@ body {
 .phase-out .welcome-stage {
   animation: stageOut 320ms ease-in forwards;
 }
-
-/* Desktop: the wallpaper settles from the sign-in screen's zoom, the taskbar rises. */
 @keyframes deskWall {
   from {
     transform: scale(1.08);
@@ -524,10 +469,6 @@ body {
 .phase-out .task-rise {
   animation: taskFall 260ms var(--ease-in) forwards;
 }
-
-/* ── Exit ghosts (hooks/useExitFx.ts) ───────────────────────────────────────
-   The clone of something React just removed, playing its way out. !important: the clone still
-   carries the original's enter classes, and the styles' own versions of those. */
 .exit-ghost {
   pointer-events: none !important;
 }
@@ -557,16 +498,12 @@ body {
 .exit-ghost.task-out {
   animation: taskOut 180ms ease-in forwards !important;
 }
-/* Dark <-> light or a new accent: a snapshot of the whole OS as it was, dissolving into the new
-   look (dissolveOver, called from Computer.tsx). */
 .exit-ghost.look-out {
   animation: fadeOut 360ms ease forwards !important;
 }
-/* The previous wallpaper, dissolving into the one just picked. */
 .exit-ghost.wall-out {
   animation: fadeOut 480ms ease-in-out forwards !important;
 }
-/* A closed tab: fades while its neighbours slide over the room it took (its width + the 2px gap). */
 @keyframes tabOut {
   to {
     opacity: 0;
@@ -575,17 +512,6 @@ body {
 }
 .exit-ghost.tab-out {
   animation: tabOut 170ms ease-in forwards !important;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-8px); }
-  40% { transform: translateX(8px); }
-  60% { transform: translateX(-5px); }
-  80% { transform: translateX(5px); }
-}
-.shake {
-  animation: shake 360ms ease-in-out;
 }
 
 @keyframes spin {
@@ -602,10 +528,6 @@ body {
 .caret {
   animation: caretBlink 1s steps(1) infinite;
 }
-
-/* ── Security Cameras: what is laid over a camera's picture (src/apps/cameras) ───────────────
-   Not under .os-root: the picture expanded over the whole display sits beside the desktop, not in
-   it. The colours are a monitor's own - white on the picture - whatever the theme. */
 .cam-picture {
   position: relative;
   overflow: hidden;
@@ -628,7 +550,6 @@ body {
 .cam-lines {
   background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 2px, rgba(0, 0, 0, 0.2) 3px, rgba(0, 0, 0, 0) 4px);
 }
-/* A soft band drifting down the picture, as on a tube that is not quite in step with its camera. */
 @keyframes camRoll {
   from { transform: translateY(-20%); }
   to { transform: translateY(120%); }
@@ -642,8 +563,6 @@ body {
 .cam-vignette {
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.5) 100%);
 }
-/* Snow: one tile of noise, thrown about a few times a second. Up at once, away slowly - the
-   picture under it fades in. */
 @keyframes camSnow {
   0% { background-position: 0 0; }
   20% { background-position: -97px 53px; }
@@ -670,7 +589,6 @@ body {
   padding: 4px 10px;
   background: rgba(0, 0, 0, 0.55);
 }
-/* Lettering burnt into the picture. */
 .cam-osd {
   font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
   font-size: 12px;
@@ -701,9 +619,6 @@ body {
   background: #ff4d4d;
   animation: camRec 1.2s steps(2, start) infinite;
 }
-
-/* ── Custom apps ─────────────────────────────────────────────────────────── */
-/* The count on an app's icon (os/AppBadge.tsx): the accent, as the taskbar's own; mac's dock has its red. */
 .app-badge {
   position: absolute;
   top: 1px;
@@ -736,4 +651,65 @@ body {
 }
 .os-root[data-style='retro'] .app-badge {
   display: none;
+}
+.quick-mute {
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  color: var(--text-1);
+}
+.quick-mute:hover, .quick-mute[aria-pressed='true'] { background: var(--control-hover); }
+.quick-mute:focus-visible { outline: 2px solid var(--accent-fill); outline-offset: 2px; }
+.quick-mute:active { transform: scale(0.94); }
+.quick-mute-icons {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+.quick-mute-icons svg {
+  grid-area: 1 / 1;
+  transition: opacity 160ms ease-in-out, filter 160ms ease-in-out, transform 160ms ease-in-out;
+}
+.quick-mute-icons .is-hidden { opacity: 0; filter: blur(3px); transform: scale(0.85); }
+.os-root[data-theme='dark'] .quick-mute[aria-pressed='true'] {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 4px rgba(0,0,0,0.2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .quick-mute, .quick-mute-icons svg { transition: none; }
+  .quick-mute:active, .quick-mute-icons .is-hidden { transform: none; }
+  .quick-mute-icons .is-hidden { filter: none; }
+}
+.os-root :is(button, a[href], summary, select, input[type='range'], input[type='checkbox'], input[type='radio'], [role='button'], [role='menuitem'], [role='tab'], [role='switch']) {
+  cursor: pointer;
+}
+.os-root :is(button, input, select):disabled, .os-root [aria-disabled='true'] { cursor: not-allowed; }
+.os-root :is(button, a[href], [role='button'], [role='menuitem'], [role='tab']):focus-visible {
+  outline: 2px solid var(--accent-fill);
+  outline-offset: 2px;
+}
+.desktop-icon {
+  transition: left 180ms var(--ease-out), top 180ms var(--ease-out), background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+.desktop-icon.is-dragging {
+  cursor: grabbing;
+  transition: none;
+  background: rgba(255,255,255,0.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+.quick-tile { box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 2px 5px rgba(0,0,0,0.08); }
+.quick-tile:hover { transform: translateY(-1px); }
+.quick-tile:active { transform: scale(0.96); }
+.notification-list .notification-card { animation: notificationIn 240ms var(--ease-out) both; }
+@keyframes notificationIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-root[data-style='modern'] :is(.toast-in, .notification-center, .notification-card, .exit-ghost.toast-out, .exit-ghost.fly-out) { animation: none !important; }
+  .desktop-icon, .quick-tile { transition: none; }
+  .quick-tile:hover, .quick-tile:active { transform: none; }
 }

@@ -1,29 +1,21 @@
----@type table sd-computers config root (configs/config.lua).
 local config = require 'configs.config'
----@type table Profile persistence (server.computers.store).
+
 local store = require 'server.computers.store'
----@type table UTF-8-safe clipping (shared.text).
+
 local text = require 'shared.text'
 
----@type table Profile module (roaming per-character settings + Notepad notes); returned at end of file.
 local profile = {}
 
----@type integer Notes one character may keep.
 local MAX_NOTES = 50
----@type integer Characters per note title / body.
+
 local MAX_TITLE, MAX_BODY = 80, 20000
 
----@type table<string, table<string, boolean>> style -> wallpaper ids that style offers.
 local WALLPAPERS = {}
 for style, def in pairs(config.Desktop.Styles or {}) do
     WALLPAPERS[style] = {}
     for _, w in ipairs(def.Wallpapers or {}) do WALLPAPERS[style][w.id] = true end
 end
 
----Clean one style's settings to the known, valid fields only (anything else is dropped).
----@param t any
----@param style string
----@return table settings { theme?, wallpaper?, accent? }
 local function sanitize(t, style)
     if type(t) ~= 'table' then return {} end
     local out = {}
@@ -34,13 +26,38 @@ local function sanitize(t, style)
         if known[w] or (#w <= 512 and (w:match('^https://') or w:match('^nui://'))) then out.wallpaper = w end
     end
     if type(t.accent) == 'string' and t.accent:match('^#%x%x%x%x%x%x$') then out.accent = t.accent:lower() end
+    if style == 'modern' then
+        for _, key in ipairs({ 'taskbarPins', 'desktopHidden' }) do
+            if type(t[key]) == 'table' then
+                out[key] = {}
+                local count = 0
+                for app, value in pairs(t[key]) do
+                    if type(app) == 'string' and #app <= 128 and app:match('^[%w_:%-]+$') and type(value) == 'boolean' then
+                        out[key][app] = value
+                        count = count + 1
+                        if count >= 256 then break end
+                    end
+                end
+            end
+        end
+        if type(t.desktopPositions) == 'table' then
+            out.desktopPositions = {}
+            local count = 0
+            for app, pos in pairs(t.desktopPositions) do
+                if type(app) == 'string' and #app <= 128 and app:match('^[%w_:%-]+$') and type(pos) == 'table'
+                    and type(pos.col) == 'number' and type(pos.row) == 'number'
+                    and pos.col >= 0 and pos.col <= 255 and pos.col % 1 == 0
+                    and pos.row >= 0 and pos.row <= 255 and pos.row % 1 == 0 then
+                    out.desktopPositions[app] = { col = pos.col, row = pos.row }
+                    count = count + 1
+                    if count >= 256 then break end
+                end
+            end
+        end
+    end
     return out
 end
 
----All of a character's stored settings as { [style] = settings }. Profiles saved before styles
----existed held one flat { theme, wallpaper, accent } - that becomes the 'modern' entry.
----@param citizenid string
----@return table<string, table>
 local function allSettings(citizenid)
     local raw = store.getProfile(citizenid)
     local t = raw and json.decode(raw)
@@ -49,19 +66,10 @@ local function allSettings(citizenid)
     return t
 end
 
----A character's settings for one style (empty table = that style's defaults apply).
----@param citizenid string
----@param style string
----@return table settings
 function profile.settings(citizenid, style)
     return sanitize(allSettings(citizenid)[style], style)
 end
 
----Merge + persist a settings change for one style; returns that style's stored result.
----@param citizenid string
----@param style string
----@param patch table partial settings
----@return table settings
 function profile.saveSettings(citizenid, style, patch)
     local all = allSettings(citizenid)
     local merged = sanitize(all[style], style)
@@ -71,9 +79,6 @@ function profile.saveSettings(citizenid, style, patch)
     return merged
 end
 
----A character's notes, newest edit first.
----@param citizenid string
----@return table[] notes { id, title, body, updatedAt }
 function profile.notes(citizenid)
     local _, raw = store.getProfile(citizenid)
     local list = raw and json.decode(raw)
@@ -82,12 +87,6 @@ function profile.notes(citizenid)
     return list
 end
 
----Create or update a note. A note without an id (or with an unknown one) is new; at MAX_NOTES the
----save is refused.
----@param citizenid string
----@param note table { id?, title, body }
----@return table|nil saved the stored note
----@return string|nil err locale key when refused
 function profile.saveNote(citizenid, note)
     if type(note) ~= 'table' then return nil, 'err.invalid' end
     local title = text.clip(note.title, MAX_TITLE)
@@ -112,9 +111,6 @@ function profile.saveNote(citizenid, note)
     return saved, nil
 end
 
----Delete a note by id (no-op for an unknown id).
----@param citizenid string
----@param id string
 function profile.deleteNote(citizenid, id)
     local list, kept = profile.notes(citizenid), {}
     for _, n in ipairs(list) do

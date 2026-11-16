@@ -1,4 +1,6 @@
 import { Bell, Info, Monitor, Power, Sun, Volume2 } from 'lucide-react';
+import { useQuickSettings } from '@/store/quickSettings';
+import { useAudio } from '@/store/audio';
 import { useOS } from '@/store/os';
 import { t } from '@/i18n';
 import { Select, Toggle } from '@/ui/controls';
@@ -6,10 +8,11 @@ import { Group, MonitorPreview, PageHeader, Row, Slider } from '../ui';
 import { useLocal } from '../local';
 import type { Go } from '../nav';
 
-/** System: the device hero (monitor with the live wallpaper) and the everyday hardware rows. */
 export default function SystemPage({ go }: { go: Go }) {
   const computer = useOS(s => s.payload!.computer);
   const local = useLocal();
+  const { brightness, setBrightness } = useQuickSettings();
+  const { volume, muted, setVolume } = useAudio();
 
   return (
     <>
@@ -29,11 +32,11 @@ export default function SystemPage({ go }: { go: Go }) {
       <Group>
         <Row icon={<Monitor size={20} strokeWidth={1.5} />} title={t('ui.settings.display')} description={t('ui.settings.display_desc')}>
           <Sun size={16} className="text-t2" />
-          <Slider className="w-[160px]" value={local.brightness} onChange={v => local.set({ brightness: v })} label={t('ui.settings.display_brightness')} />
+          <Slider className="w-[160px]" value={brightness} onChange={setBrightness} label={t('ui.settings.display_brightness')} />
         </Row>
         <Row icon={<Volume2 size={20} strokeWidth={1.5} />} title={t('ui.settings.sound')} description={t('ui.settings.sound_desc')}>
-          <span className="w-7 text-right tabular-nums">{local.volume}</span>
-          <Slider className="w-[160px]" value={local.volume} onChange={v => local.set({ volume: v })} label={t('ui.settings.sound_volume')} />
+          <span className="w-7 text-right tabular-nums">{muted ? 0 : volume}</span>
+          <Slider className="w-[160px]" value={muted ? 0 : volume} onChange={setVolume} label={t('ui.settings.sound_volume')} />
         </Row>
         <Row icon={<Bell size={20} strokeWidth={1.5} />} title={t('ui.settings.notifications')} description={t('ui.settings.notifications_desc')}>
           <Toggle

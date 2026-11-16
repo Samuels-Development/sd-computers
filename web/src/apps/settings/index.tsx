@@ -15,16 +15,12 @@ import ManagedPage from './pages/ManagedPage';
 import AccountsPage from './pages/AccountsPage';
 import TimePage from './pages/TimePage';
 import PrivacyPage from './pages/PrivacyPage';
+import AppsPage from './pages/AppsPage';
 
-/** win.props.page may ask for a starting page (desktop menu: Display / Personalize). */
-const requested = (p: unknown): PageId | null => (p === 'system' || p === 'personalization' ? p : null);
+const requested = (p: unknown): PageId | null => (p === 'system' || p === 'personalization' || p === 'apps' ? p : null);
 
-/**
- * Settings: account card, "Find a setting" search and a coloured-tile nav on the left;
- * the selected page (with breadcrumbs for sub-pages) on the right. Only Personalization changes
- * anything real - via updateSettings - the rest shows this computer's facts or cosmetic switches.
- */
 export default function Settings({ win }: AppProps) {
+  const style = useOS(s => s.payload!.computer.style);
   const user = useOS(s => s.payload!.user);
   const [page, setPage] = useState<PageId>(() => requested(win.props?.page) ?? 'system');
   const [query, setQuery] = useState('');
@@ -32,7 +28,6 @@ export default function Settings({ win }: AppProps) {
   const { w } = useSize(rootRef);
   const narrow = w > 0 && w < 780;
 
-  // Re-launching Settings with a page (openApp replaces props) navigates the open window.
   const lastProps = useRef(win.props);
   useEffect(() => {
     if (win.props === lastProps.current) return;
@@ -42,7 +37,7 @@ export default function Settings({ win }: AppProps) {
   }, [win.props]);
 
   const q = query.trim().toLowerCase();
-  const items = NAV.filter(n => !q || t(`ui.settings.nav_${n.id}`).toLowerCase().includes(q) || t(`ui.settings.kw_${n.id}`).toLowerCase().includes(q));
+  const items = NAV.filter(n => (n.id !== 'apps' || style === 'modern') && (!q || t(`ui.settings.nav_${n.id}`).toLowerCase().includes(q) || t(`ui.settings.kw_${n.id}`).toLowerCase().includes(q)));
 
   const go = (p: PageId) => setPage(p);
 
@@ -68,6 +63,9 @@ export default function Settings({ win }: AppProps) {
       break;
     case 'time':
       content = <TimePage />;
+      break;
+    case 'apps':
+      content = <AppsPage request={win.props} />;
       break;
     case 'privacy':
       content = <PrivacyPage />;
