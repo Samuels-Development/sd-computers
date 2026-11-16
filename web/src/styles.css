@@ -161,6 +161,18 @@ body {
 .fade-in {
   animation: fadeIn 250ms ease-out;
 }
+.ctl-select-menu { animation: selectMenuEnter 167ms cubic-bezier(0,0,0,1); }
+.ctl-select-menu.site-select-menu .ctl-select-option[data-active='true'] { background: var(--select-hover); }
+.ctl-select-menu .ctl-select-option { white-space: normal; overflow-wrap: anywhere; }
+.exit-ghost.select-menu-out { animation: selectMenuExit 167ms cubic-bezier(0,0,0,1) forwards !important; }
+@keyframes selectMenuEnter {
+  from { opacity: 0; transform: translateY(var(--select-menu-y)) translateY(var(--select-menu-slide)) scale(.98); }
+  to { opacity: 1; transform: translateY(var(--select-menu-y)) scale(1); }
+}
+@keyframes selectMenuExit {
+  from { opacity: 1; transform: translateY(var(--select-menu-y)) scale(1); }
+  to { opacity: 0; transform: translateY(var(--select-menu-y)) translateY(var(--select-menu-slide)) scale(.98); }
+}
 @keyframes fadeOut {
   from {
     opacity: 1;
@@ -679,6 +691,7 @@ body {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 4px rgba(0,0,0,0.2);
 }
 @media (prefers-reduced-motion: reduce) {
+  .os-root .ctl-select-menu { animation: none !important; }
   .quick-mute, .quick-mute-icons svg { transition: none; }
   .quick-mute:active, .quick-mute-icons .is-hidden { transform: none; }
   .quick-mute-icons .is-hidden { filter: none; }

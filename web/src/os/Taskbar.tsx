@@ -116,7 +116,7 @@ export default function Taskbar({ onAppContextMenu }: { onAppContextMenu: (app: 
         <button
           type="button"
           aria-label={`${t('ui.toast.center')}${unread ? ` (${unread})` : ''}`}
-          aria-expanded={flyout === 'calendar'}
+          aria-expanded={flyout === 'notifications'}
           title={t('ui.toast.center')}
           onClick={() => setFlyout(flyout === 'notifications' ? null : 'notifications')}
           className={`w-8 h-10 ml-0.5 flex items-center justify-center rounded-ctl text-t1 hover:bg-subtle ${flyout === 'notifications' ? 'bg-subtle' : ''}`}

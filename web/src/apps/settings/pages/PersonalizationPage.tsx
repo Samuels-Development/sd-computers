@@ -83,13 +83,13 @@ export default function PersonalizationPage({ go }: { go: Go }) {
         <Expander icon={<Palette size={20} strokeWidth={1.5} />} title={t('ui.settings.colors')} description={t('ui.settings.colors_desc')}>
           {!retro && (
             <SubRow label={t('ui.settings.mode_choose')} description={t('ui.settings.mode_choose_desc')}>
-              <Select className="w-[140px]" value={settings.theme} onChange={e => update({ theme: e.target.value as Theme })}>
+              <Select aria-label={t('ui.settings.mode_choose')} className="w-[140px]" value={settings.theme} onChange={value => update({ theme: value as Theme })}>
                 <option value="light">{t('ui.settings.mode_light')}</option>
                 <option value="dark">{t('ui.settings.mode_dark')}</option>
               </Select>
             </SubRow>
           )}
-          <div className="pl-[60px] pr-4 py-4">
+          <div className="settings-inset pl-[60px] pr-4 py-4" data-setting={t('ui.settings.accent')} tabIndex={-1}>
             <div className="text-body text-t1 mb-3">{retro ? t('ui.settings.accent_titlebar_choose') : t('ui.settings.accent_choose')}</div>
             <div className="flex flex-wrap gap-2">
               {desktop.accents.map(hex => {
@@ -144,7 +144,7 @@ function BackgroundPicker() {
   };
 
   return (
-    <div className="pl-[60px] pr-4 py-4">
+    <div className="settings-inset pl-[60px] pr-4 py-4">
       <div className="text-body text-t1 mb-3">{t('ui.settings.bg_choose')}</div>
       <div className="flex flex-wrap gap-3 mb-6">
         {thumbs.map(w => {
@@ -170,7 +170,7 @@ function BackgroundPicker() {
         })}
       </div>
 
-      <div className="text-body text-t1 mb-1">{t('ui.settings.bg_url')}</div>
+      <div className="text-body text-t1 mb-1" data-setting={t('ui.settings.bg_url')} tabIndex={-1}>{t('ui.settings.bg_url')}</div>
       <div className="text-caption text-t2 mb-2">{t('ui.settings.bg_url_desc')}</div>
       <div className="flex items-start gap-2 max-w-[560px]">
         <div className="flex-1 min-w-0">

@@ -102,7 +102,7 @@ function StoryForm({ news, editing, props, onDone }: { news: News; editing?: Art
       <div className="flex flex-col gap-4">
         <div className="w-56">
           <Field label={t('ui.browser.news_f_section')}>
-            <Pick value={category} onChange={e => setCategory(e.target.value)}>
+            <Pick value={category} onChange={value => setCategory(value)}>
               {news.categories.map(c => (
                 <option key={c} value={c}>
                   {c}
@@ -140,7 +140,7 @@ function StoryForm({ news, editing, props, onDone }: { news: News; editing?: Art
         {!live && (
           <div className="w-56">
             <Field label={t('ui.browser.news_f_when')}>
-              <Pick value={go} onChange={e => setGo(e.target.value)}>
+              <Pick value={go} onChange={value => setGo(value)}>
                 {waiting && editing?.publishAt !== undefined && <option value="keep">{t('ui.browser.news_keep_time', when(editing.publishAt, clock24))}</option>}
                 <option value="now">{t('ui.browser.news_now')}</option>
                 {DELAYS.map(m => (

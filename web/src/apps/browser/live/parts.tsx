@@ -1,8 +1,9 @@
-import { useEffect, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { useEffect, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { Check, ImageOff, Mail, MessageSquare, Phone, RefreshCw, X } from 'lucide-react';
 import { useOS } from '@/store/os';
 import { rpc } from '@/nui/rpc';
 import { t } from '@/i18n';
+import { Select, type SelectProps } from '@/ui/Select';
 import type { LiveKind, Network, Site as SiteDef } from '../types';
 import { cx } from '../model';
 import { openHandlers, type OpenFn } from '../parts';
@@ -60,11 +61,7 @@ export function Btn({ kind = 'plain', small, icon, className, children, ...rest 
 
 export const Input = ({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) => <input className={cx('s-input', className)} spellCheck={false} autoComplete="off" {...rest} />;
 export const Area = ({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea className={cx('s-area os-scroll', className)} spellCheck={false} {...rest} />;
-export const Pick = ({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) => (
-  <select className={cx('s-select', className)} {...rest}>
-    {children}
-  </select>
-);
+export const Pick = ({ className, ...rest }: SelectProps) => <Select appearance="site" className={cx('s-select', className)} {...rest} />;
 
 /** A labelled field of a form. */
 export function Field({ label, aside, children }: { label: string; aside?: ReactNode; children: ReactNode }) {

@@ -18,7 +18,7 @@ export default function SystemPage({ go }: { go: Go }) {
     <>
       <PageHeader title={t('ui.settings.nav_system')} />
 
-      <div className="flex items-center gap-6 mb-6 min-w-0">
+      <div className="settings-device-banner flex items-center gap-6 mb-6 min-w-0">
         <MonitorPreview width={168} />
         <div className="min-w-0">
           <div className="text-subtitle font-semibold text-t1 truncate">{computer.hostname}</div>
@@ -46,7 +46,7 @@ export default function SystemPage({ go }: { go: Go }) {
           />
         </Row>
         <Row icon={<Power size={20} strokeWidth={1.5} />} title={t('ui.settings.power')} description={t('ui.settings.power_desc')}>
-          <Select className="w-[200px]" value={local.power} onChange={e => local.set({ power: e.target.value as typeof local.power })}>
+          <Select aria-label={t('ui.settings.power')} className="w-[200px]" value={local.power} onChange={value => local.set({ power: value as typeof local.power })}>
             <option value="efficiency">{t('ui.settings.power_efficiency')}</option>
             <option value="balanced">{t('ui.settings.power_balanced')}</option>
             <option value="performance">{t('ui.settings.power_performance')}</option>

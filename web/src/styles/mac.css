@@ -993,6 +993,12 @@
   border-color: var(--mac-btn-border);
   box-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.12);
 }
+.os-root[data-style='mac'] .ctl-select > svg { display: none; }
+.os-root[data-style='mac'] .ctl-select-menu:not(.site-select-menu) {
+  border-radius: 6px;
+  background: var(--layer);
+  font-size: 13px;
+}
 .os-root[data-style='mac'][data-theme='dark'] .ctl-select {
   background-color: rgba(255, 255, 255, 0.13);
 }

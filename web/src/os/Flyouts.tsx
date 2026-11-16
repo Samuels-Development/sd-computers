@@ -32,6 +32,7 @@ export function CalendarFlyout({ embedded = false }: { embedded?: boolean }) {
   const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   return (
     <Panel embedded={embedded}>
+      <div className="m-1 rounded-win overflow-hidden bg-[var(--card)]">
       <button type="button" aria-label={t('ui.toast.calendar')} aria-expanded={expanded} onClick={() => setExpanded(v => !v)} className="w-full px-4 py-3 border-b border-stroke text-body font-semibold text-t1 flex items-center justify-between hover:bg-subtle">
         {fmtLongDate(now)}{expanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
       </button>
@@ -56,6 +57,7 @@ export function CalendarFlyout({ embedded = false }: { embedded?: boolean }) {
           ))}
         </div>
       </div>}
+      </div>
     </Panel>
   );
 }
@@ -133,7 +135,7 @@ function Slider({ icon, label, value, onChange }: { icon: ReactNode; label: stri
   );
 }
 
-function Panel({ children, embedded = false }: { children: ReactNode; embedded?: boolean }) {
+function Panel({ children, embedded = false, square = false }: { children: ReactNode; embedded?: boolean; square?: boolean }) {
   const ref = useExitFx('fly-out');
   return (
     <div ref={ref} className={`${embedded ? 'relative shrink-0 w-full' : 'absolute right-3 bottom-[60px] w-[360px] max-w-[calc(100vw-24px)] fly-up'} acrylic rounded-win shadow-flyout overflow-hidden`} style={{ zIndex: 9100 }} onMouseDown={e => e.stopPropagation()}>

@@ -249,7 +249,7 @@ export default function Composer({ init, width, onBack }: { init: ComposeInit; w
         )}
         <div className="flex-1 flex flex-col min-h-[340px] rounded-win bg-card border border-stroke shadow-card">
           <FieldRow label={t('ui.mail.from_label')}>
-            <Select value={from} onChange={e => changeFrom(e.target.value)} disabled={sending || accounts.length < 2} title={fromAccount?.email}>
+            <Select value={from} onChange={value => changeFrom(value)} disabled={sending || accounts.length < 2} title={fromAccount?.email}>
               {accounts.map(a => (
                 <option key={a.email} value={a.email}>
                   {a.name} &lt;{a.email}&gt;

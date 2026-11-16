@@ -160,5 +160,12 @@
   "apps_show_named": "Show %s on desktop",
   "apps_hide_named": "Hide %s from desktop",
   "apps_empty": "No apps match your filters.",
-  "apps_count_one": "1 app"
+  "apps_count_one": "1 app",
+  "search_results": "Search results",
+  "search_count": "%s settings found",
+  "search_clear": "Clear search",
+  "navigation_open": "Open navigation",
+  "navigation_close": "Close navigation",
+  "back": "Back",
+  "title": "Settings"
 }

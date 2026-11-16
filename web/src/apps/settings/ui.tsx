@@ -1,17 +1,19 @@
-import { useId, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useId, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useOS } from '@/store/os';
 import { Card } from '@/ui/controls';
 import { Wallpaper } from '@/os/Wallpaper';
+import { useSize } from './useSize';
 
 // Building blocks shared by every Settings page.
+export const SettingsExpansion = createContext<string | undefined>(undefined);
 
 const cx = (...c: (string | false | null | undefined)[]): string => c.filter(Boolean).join(' ');
 
 /** Page title; with `parent` it becomes a Win11 breadcrumb ("System  >  About"). */
 export function PageHeader({ title, parent, onParent }: { title: string; parent?: string; onParent?: () => void }) {
   return (
-    <h1 className="flex items-center gap-2 mb-6 text-title font-semibold text-t1 font-display min-w-0">
+    <h1 className="settings-page-title flex items-center gap-2 min-w-0" tabIndex={-1}>
       {parent && (
         <>
           <button type="button" onClick={onParent} className="text-t2 hover:text-t1 transition-colors duration-150 truncate shrink-0">
@@ -20,7 +22,7 @@ export function PageHeader({ title, parent, onParent }: { title: string; parent?
           <ChevronRight size={22} className="text-t2 shrink-0" />
         </>
       )}
-      <span className="truncate">{title}</span>
+      <span className="min-w-0">{title}</span>
     </h1>
   );
 }
@@ -38,10 +40,15 @@ export function Group({ title, children }: { title?: string; children: ReactNode
 /** A settings card row. With `onClick` it navigates (chevron); otherwise it hosts a control. */
 export function Row({ icon, title, description, onClick, children }: { icon?: ReactNode; title: ReactNode; description?: ReactNode; onClick?: () => void; children?: ReactNode }) {
   return (
+    <div className="settings-row" data-setting={typeof title === 'string' ? title : undefined} tabIndex={onClick ? 0 : -1}
+      role={onClick ? 'button' : undefined} onKeyDown={e => {
+        if (e.target === e.currentTarget && onClick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick(); }
+      }}>
     <Card icon={icon} title={title} description={description} onClick={onClick}>
-      {children && <div className="shrink-0 flex items-center gap-3 text-body text-t2">{children}</div>}
+      {children && <div className="settings-row-control shrink-0 flex items-center gap-3 text-body text-t2">{children}</div>}
       {onClick && <ChevronRight size={16} className="shrink-0 text-t2" />}
     </Card>
+    </div>
   );
 }
 
@@ -61,21 +68,26 @@ export function Expander({
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const expand = useContext(SettingsExpansion);
+  const [open, setOpen] = useState(defaultOpen || expand === title);
+  const bodyId = useId();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const { h } = useSize(bodyRef);
   return (
-    <div className="rounded-win border border-stroke bg-card overflow-hidden">
+    <div className="settings-expander rounded-win border border-stroke bg-card overflow-hidden" data-setting={typeof title === 'string' ? title : undefined} tabIndex={-1}>
       <div
         role="button"
         tabIndex={0}
         aria-expanded={open}
+        aria-controls={bodyId}
         onClick={() => setOpen(o => !o)}
         onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             setOpen(o => !o);
           }
         }}
-        className="w-full flex items-center gap-4 px-4 py-3 min-h-[64px] text-left cursor-pointer hover:bg-card-hover transition-colors duration-150 outline-none"
+        className="settings-expander-header w-full flex items-center gap-4 px-4 py-3 min-h-[64px] text-left cursor-pointer hover:bg-card-hover transition-colors duration-150 outline-none"
       >
         {icon && <span className="shrink-0 text-t1">{icon}</span>}
         <div className="flex-1 min-w-0">
@@ -87,7 +99,9 @@ export function Expander({
           <ChevronDown size={16} className={cx('transition-transform duration-150', open && 'rotate-180')} />
         </span>
       </div>
-      {open && <div className="border-t border-stroke fade-in">{children}</div>}
+      <div id={bodyId} className="settings-expander-body" data-open={open} aria-hidden={!open} inert={!open} style={{ height: open ? h : 0 }}>
+        <div ref={bodyRef} className="border-t border-stroke">{children}</div>
+      </div>
     </div>
   );
 }
@@ -95,7 +109,7 @@ export function Expander({
 /** One line inside an expander's body (label left, control right). */
 export function SubRow({ label, description, children }: { label: ReactNode; description?: ReactNode; children?: ReactNode }) {
   return (
-    <div className="flex items-center gap-4 pl-[60px] pr-4 py-3 min-h-[52px] border-b border-stroke last:border-b-0">
+    <div className="settings-subrow flex items-center gap-4 pl-[60px] pr-4 py-3 min-h-[52px] border-b border-stroke last:border-b-0" data-setting={typeof label === 'string' ? label : undefined} tabIndex={-1}>
       <div className="flex-1 min-w-0">
         <div className="text-body text-t1">{label}</div>
         {description && <div className="text-caption text-t2">{description}</div>}

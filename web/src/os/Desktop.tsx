@@ -10,7 +10,7 @@ import { AppIcon } from './icons';
 import WindowFrame from './WindowFrame';
 import Taskbar from './Taskbar';
 import StartMenu from './StartMenu';
-import { QuickSettings, Toasts } from './Flyouts';
+import { CalendarFlyout, QuickSettings, Toasts } from './Flyouts';
 import NotificationCenter from './NotificationCenter';
 import AppBadge from './AppBadge';
 import { desktopLayout, ICON_W, ICON_H } from './desktopLayout';
@@ -219,7 +219,8 @@ export default function Desktop() {
 
       <Taskbar onAppContextMenu={showAppMenu} />
       {start && <StartMenu />}
-      {(flyout === 'calendar' || flyout === 'notifications') && <NotificationCenter showCalendar={flyout === 'calendar'} />}
+      {flyout === 'calendar' && <CalendarFlyout />}
+      {flyout === 'notifications' && <NotificationCenter showCalendar={false} />}
       {flyout === 'quick' && <QuickSettings />}
       <Toasts />
 

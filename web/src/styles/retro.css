@@ -63,6 +63,18 @@
   background: var(--accent);
   color: #fff;
 }
+.os-root[data-style='retro'] .ctl-select-menu:not(.site-select-menu) {
+  border-radius: 0;
+  border: 2px solid var(--frame);
+  box-shadow: 2px 2px 0 var(--shadow);
+  font-family: var(--rt-font);
+  font-size: 13px;
+  animation: none;
+}
+.os-root[data-style='retro'] .ctl-select-menu:not(.site-select-menu) .ctl-select-option { border-radius: 0; }
+.os-root[data-style='retro'] .ctl-select-menu:not(.site-select-menu) .ctl-select-option[data-active='true'] {
+  background: var(--accent-fill); color: var(--accent-on);
+}
 
 /* ── Bevel primitives ───────────────────────────────────────────────────────────────────── */
 .os-root[data-style='retro'] .rt-p {
