@@ -10,11 +10,6 @@ import { signIn, powerOff } from './session';
 import { sfx } from './sfx';
 import { Spinner } from '@/ui/controls';
 
-/**
- * Lock screen: big clock over the wallpaper; any click/key slides it away to the
- * sign-in panel (blurred wallpaper, avatar, name, PIN box or Sign in button). The PIN is verified
- * server-side; wrong PINs shake the box and a lockout counts down.
- */
 export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
   const payload = useOS(s => s.payload)!;
   const settings = useOS(s => s.settings);
@@ -23,7 +18,6 @@ export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [shake, setShake] = useState(0);
   const [lockedUntil, setLockedUntil] = useState(() => (payload.computer.lockedFor > 0 ? Date.now() + payload.computer.lockedFor * 1000 : 0));
   const inputRef = useRef<HTMLInputElement>(null);
   const lockedLeft = Math.max(0, Math.ceil((lockedUntil - now.getTime()) / 1000));
@@ -32,7 +26,6 @@ export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
     if (revealed) window.setTimeout(() => inputRef.current?.focus(), 250);
   }, [revealed]);
 
-  // Any key or click on the lock screen reveals the sign-in panel (Escape is the OS-level "stand up").
   useEffect(() => {
     if (revealed) return;
     const onKey = (e: KeyboardEvent) => {
@@ -58,7 +51,6 @@ export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
     sfx.error();
     setPin('');
     setError(res.error ?? t('ui.common.error'));
-    setShake(n => n + 1);
     if (res.lockedFor) setLockedUntil(Date.now() + res.lockedFor * 1000);
     window.setTimeout(() => inputRef.current?.focus(), 50);
   };
@@ -75,7 +67,6 @@ export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
       </div>
       <div className="absolute inset-0 bg-black/10" />
 
-      {/* Lock face: clock + date, slides up and away on reveal. */}
       <div
         className="absolute inset-x-0 top-[11%] flex flex-col items-center text-white transition-all duration-500 pointer-events-none"
         style={{ transform: revealed ? 'translateY(-60px)' : 'none', opacity: revealed ? 0 : 1 }}
@@ -86,7 +77,6 @@ export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
         </div>
       </div>
 
-      {/* Sign-in panel. */}
       <div
         className="absolute inset-0 flex flex-col items-center text-white transition-all duration-500 ease-[var(--ease-out)]"
         style={{ opacity: revealed ? 1 : 0, transform: revealed ? 'none' : 'translateY(40px)', pointerEvents: revealed ? 'auto' : 'none' }}
@@ -95,19 +85,21 @@ export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
 
         <div className="lock-actions mt-7 w-[296px] flex flex-col items-center gap-3">
           {payload.computer.requiresPin ? (
-            <div key={shake} className={`w-full relative ${shake ? 'shake' : ''}`}>
+            <div className="w-full relative">
               <input
                 ref={inputRef}
                 type="password"
                 inputMode="numeric"
                 value={pin}
                 disabled={busy || lockedLeft > 0}
+                aria-invalid={!!error}
+                aria-describedby={error ? "pin-error" : undefined}
                 onChange={e => setPin(e.target.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 16))}
                 onKeyDown={e => {
                   if (e.key === 'Enter') void submit();
                 }}
                 placeholder={t('ui.lock.pin')}
-                className="w-full h-10 pl-3 pr-11 rounded-ctl bg-black/35 border border-white/25 border-b-2 border-b-white/60 text-white text-body placeholder:text-white/60 outline-none focus:bg-black/50 focus:border-b-[var(--accent-fill)]"
+                className="w-full h-10 pl-3 pr-11 rounded-ctl bg-black/35 border border-white/25 border-b-2 border-b-white/60 text-white text-body placeholder:text-white/60 outline-none focus:bg-black/50 focus:border-b-[var(--accent-fill)] aria-[invalid=true]:border-red-400 aria-[invalid=true]:bg-red-950/40 transition-colors duration-200"
               />
               <button
                 type="button"
@@ -130,9 +122,9 @@ export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
             </button>
           )}
           {lockedLeft > 0 ? (
-            <div className="text-body text-white/90 text-center page-in">{t('ui.lock.locked_out', lockedLeft)}</div>
+            <div id="pin-error" role="alert" className="text-body text-white/90 text-center page-in">{t('ui.lock.locked_out', lockedLeft)}</div>
           ) : (
-            error && <div key={`error-${shake}`} className="text-body text-white/90 text-center page-in">{error}</div>
+            error && <div id="pin-error" role="alert" className="text-body text-white/90 text-center page-in">{error}</div>
           )}
           {payload.computer.requiresPin && <button type="button" className="text-caption text-white/70 hover:text-white hover:underline" title={t('ui.lock.forgot_hint')}>{t('ui.lock.forgot')}</button>}
         </div>
@@ -145,7 +137,6 @@ export default function LockScreen({ onSignedIn }: { onSignedIn: () => void }) {
         </div>
       </div>
 
-      {/* Bottom-right status / power, like the real lock screen. */}
       <div className="absolute right-6 bottom-6 flex items-center gap-1 text-white">
         <span className="w-9 h-9 flex items-center justify-center rounded-ctl"><Wifi size={18} /></span>
         <span className="w-9 h-9 flex items-center justify-center rounded-ctl"><BatteryFull size={18} /></span>

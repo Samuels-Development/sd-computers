@@ -442,8 +442,8 @@ export function RichEditor({
           value={marks.ranged && marks.face ? marks.face : font}
           title={t('ui.files.font')}
           aria-label={t('ui.files.font')}
-          onChange={e => {
-            const next = e.target.value as FontKey;
+          onChange={value => {
+            const next = value as FontKey;
             const el = page.current;
             const r = range.current;
             if (el && r && !r.collapsed && el.contains(r.startContainer)) {
@@ -467,7 +467,7 @@ export function RichEditor({
           value={marks.size || 'n'}
           title={t('ui.files.size')}
           aria-label={t('ui.files.size')}
-          onChange={e => run('fontSize', e.target.value === 'n' ? SIZE_USUAL : SIZES[e.target.value as SizeKey])}
+          onChange={value => run('fontSize', value === 'n' ? SIZE_USUAL : SIZES[value as SizeKey])}
           className="!w-[90px] shrink-0 ml-1"
         >
           <option value="s">{t('ui.files.size_s')}</option>
@@ -482,7 +482,7 @@ export function RichEditor({
           value={marks.list ? 'p' : marks.style}
           title={t('ui.files.style')}
           aria-label={t('ui.files.style')}
-          onChange={e => run('formatBlock', STYLES.find(s => s.key === e.target.value)?.tag ?? 'P')}
+          onChange={value => run('formatBlock', STYLES.find(s => s.key === value)?.tag ?? 'P')}
           className="!w-[98px] shrink-0 ml-1"
         >
           {STYLES.map(s => (

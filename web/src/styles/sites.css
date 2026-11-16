@@ -153,6 +153,7 @@
 .site .s-select {
   cursor: pointer;
 }
+  .site-select-menu .ctl-select-option[data-active='true'] { background: var(--select-hover); }
 .site .s-input:focus,
 .site .s-area:focus,
 .site .s-select:focus {

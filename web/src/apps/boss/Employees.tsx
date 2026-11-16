@@ -175,7 +175,7 @@ export default function Employees({ active }: { active: boolean }) {
                             <Select
                               value={e.grade}
                               disabled={isBusy}
-                              onChange={ev => void changeGrade(e, Number(ev.target.value))}
+                              onChange={value => void changeGrade(e, Number(value))}
                               className="w-[160px]"
                               aria-label={t('ui.boss.col_rank')}
                             >

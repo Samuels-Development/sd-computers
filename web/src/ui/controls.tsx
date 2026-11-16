@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { AlertTriangle, CheckCircle2, Info, XCircle, X } from 'lucide-react';
 import { useExitFx } from '@/hooks/useExitFx';
 
@@ -81,14 +81,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
   return <textarea ref={ref} className={cx('ctl-field ctl-textarea', fieldBase, 'px-2.5 py-1.5 resize-none os-scroll', className)} spellCheck={false} {...rest} />;
 });
 
-/** Native select styled as a Fluent combo box. */
-export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select className={cx('ctl-field ctl-select', fieldBase, 'h-8 px-2 cursor-pointer', className)} {...rest}>
-      {children}
-    </select>
-  );
-}
+export { Select } from './Select';
 
 /** Fluent toggle switch: the knob glides across, and stretches towards the other side while held. */
 export function Toggle({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label?: ReactNode; disabled?: boolean }) {

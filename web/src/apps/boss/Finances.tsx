@@ -109,7 +109,7 @@ export default function Finances() {
             <form onSubmit={e => void transfer('deposit', e)} className="flex flex-col gap-3">
               <AmountField value={depAmt} onChange={setDepAmt} max={max} disabled={busy === 'deposit'} />
               <Field label={t('ui.boss.deposit_from')}>
-                <Select value={depFrom} onChange={e => setDepFrom(e.target.value)} disabled={busy === 'deposit'}>
+                <Select value={depFrom} onChange={value => setDepFrom(value)} disabled={busy === 'deposit'}>
                   {sources.map(s => (
                     <option key={s} value={s}>
                       {sourceLabel(s)}

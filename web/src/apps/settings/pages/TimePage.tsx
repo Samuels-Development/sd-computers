@@ -25,7 +25,7 @@ export default function TimePage() {
           <Toggle checked disabled onChange={() => undefined} label={t('ui.settings.on')} />
         </Row>
         <Row icon={<Globe size={20} strokeWidth={1.5} />} title={t('ui.settings.time_zone')}>
-          <Select className="w-[220px]" value="ls" disabled onChange={() => undefined}>
+          <Select aria-label={t('ui.settings.time_zone')} className="w-[220px]" value="ls" disabled onChange={() => undefined}>
             <option value="ls">{t('ui.settings.time_zone_value')}</option>
           </Select>
         </Row>

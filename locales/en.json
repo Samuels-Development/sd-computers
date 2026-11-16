@@ -602,7 +602,11 @@
     "taskbar": {
       "start": "Start",
       "search": "Search",
-      "show_desktop": "Show desktop"
+      "show_desktop": "Show desktop",
+      "open": "Open",
+      "pin": "Pin to taskbar",
+      "unpin": "Unpin from taskbar",
+      "save_failed": "Could not save taskbar pins."
     },
     "start": {
       "search": "Search for apps, settings, and documents",
@@ -618,7 +622,12 @@
       "display": "Display settings",
       "personalize": "Personalize",
       "terminal": "Open in Terminal",
-      "esc_again": "Press Esc again to leave the computer."
+      "esc_again": "Press Esc again to leave the computer.",
+      "hide": "Hide from desktop",
+      "manage_apps": "Manage apps",
+      "hidden_apps": "View hidden apps",
+      "move_hint": "Drag to move, or use Alt + arrow keys",
+      "save_failed": "Could not save desktop changes."
     },
     "quick": {
       "wifi": "Wi-Fi",
@@ -627,10 +636,27 @@
       "saver": "Battery saver",
       "focus": "Focus",
       "accessibility": "Accessibility",
-      "settings": "All settings"
+      "settings": "All settings",
+      "controls": "Quick settings",
+      "mute": "Mute audio",
+      "unmute": "Unmute audio",
+      "on": "On",
+      "off": "Off",
+      "connected": "Connected",
+      "disconnected": "Not connected"
     },
     "toast": {
-      "system": "System"
+      "system": "System",
+      "title": "Notifications",
+      "center": "Notifications and calendar",
+      "clear": "Clear all",
+      "empty": "You’re all caught up",
+      "empty_hint": "New notifications will appear here.",
+      "dismiss": "Dismiss notification",
+      "open": "Open notification",
+      "previous_month": "Previous month",
+      "next_month": "Next month",
+      "calendar": "Calendar"
     },
     "hack": {
       "difficulty_easy": "easy",
@@ -1305,7 +1331,32 @@
       "camera": "Camera",
       "microphone": "Microphone",
       "accent_titlebar": "Title bar colour",
-      "accent_titlebar_choose": "Choose your title bar colour"
+      "accent_titlebar_choose": "Choose your title bar colour",
+      "nav_apps": "Apps",
+      "kw_apps": "installed applications desktop hidden visible shortcuts show hide manage",
+      "apps_hint": "Manage desktop shortcuts without uninstalling apps. Drag icons on the desktop, or select one and use Alt + arrow keys to move it.",
+      "apps_search": "Search apps",
+      "apps_filter": "Filter apps",
+      "apps_sort": "Sort apps",
+      "apps_all": "All apps",
+      "apps_visible": "On desktop",
+      "apps_hidden": "Hidden from desktop",
+      "apps_sort_name": "Name (A–Z)",
+      "apps_sort_hidden": "Hidden first",
+      "apps_count": "%s apps",
+      "apps_show": "Show",
+      "apps_hide": "Hide",
+      "apps_show_named": "Show %s on desktop",
+      "apps_hide_named": "Hide %s from desktop",
+      "apps_empty": "No apps match your filters.",
+      "apps_count_one": "1 app",
+      "search_results": "Search results",
+      "search_count": "%s settings found",
+      "search_clear": "Clear search",
+      "navigation_open": "Open navigation",
+      "navigation_close": "Close navigation",
+      "back": "Back",
+      "title": "Settings"
     },
     "cmd": {
       "banner": "%s [Version %s]",

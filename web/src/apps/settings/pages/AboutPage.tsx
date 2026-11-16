@@ -33,7 +33,7 @@ export default function AboutPage({ go }: { go: Go }) {
     <>
       <PageHeader parent={t('ui.settings.nav_system')} onParent={() => go('system')} title={t('ui.settings.about')} />
 
-      <div className="flex items-center gap-4 rounded-win border border-stroke bg-card px-4 py-4 mb-6 min-w-0">
+      <div className="settings-device-card flex items-center gap-4 rounded-win border border-stroke bg-card px-4 py-4 mb-6 min-w-0">
         <Laptop size={40} strokeWidth={1.2} className="shrink-0 text-accent-text" />
         <div className="flex-1 min-w-0">
           <div className="text-subtitle font-semibold text-t1 truncate">{c.hostname}</div>
@@ -68,7 +68,7 @@ export default function AboutPage({ go }: { go: Go }) {
 
 function SpecList({ rows }: { rows: [string, string][] }) {
   return (
-    <dl className="grid grid-cols-[minmax(120px,180px)_1fr] gap-x-6 gap-y-2.5 pl-[60px] pr-4 py-4 text-body">
+    <dl className="settings-specs grid grid-cols-[minmax(120px,180px)_1fr] gap-x-6 gap-y-2.5 pl-[60px] pr-4 py-4 text-body">
       {rows.map(([k, v]) => (
         <div key={k} className="contents">
           <dt className="text-t2">{k}</dt>

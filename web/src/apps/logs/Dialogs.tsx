@@ -104,7 +104,7 @@ export function FilterDialog({ title, node, initial, sources, onApply, onClose }
         }}
       >
         <Row label={L('f_logged') + ':'}>
-          <Select value={f.logged} onChange={e => set({ logged: e.target.value as UserFilter['logged'] })} className={small}>
+          <Select value={f.logged} onChange={value => set({ logged: value as UserFilter['logged'] })} className={small}>
             {LOGGED.map(l => (
               <option key={l} value={l}>{L(`logged_${l}`)}</option>
             ))}
@@ -127,7 +127,7 @@ export function FilterDialog({ title, node, initial, sources, onApply, onClose }
           <TextInput value={nodeLabel(node)} disabled readOnly className={small} />
         </Row>
         <Row label={L('f_sources') + ':'}>
-          <Select value={f.source} onChange={e => set({ source: e.target.value })} className={small}>
+          <Select value={f.source} onChange={value => set({ source: value })} className={small}>
             <option value="">{L('all_sources')}</option>
             {sources.map(s => (
               <option key={s} value={s}>{s}</option>

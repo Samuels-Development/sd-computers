@@ -1,33 +1,26 @@
-// The system sounds of the modern and mac looks, synthesised with WebAudio (no audio files
-// shipped). Each look has a voice of its own. SD OS Pro is glass: clean tones that step up when
-// something opens and down when it goes. SD OS Harbor is wood and air: a tock for a press, a pop
-// for a window, a whoosh into the dock, a struck chord when it starts. Retro has its own set
-// (os/retro/sounds.ts).
-//
-// Nothing that opens or closes a window has to ask for its sound: wireSounds() listens to the
-// store (a window appearing, leaving, shrinking, growing; a toast; signing out) and to presses on
-// anything that is a button. The lock screens call logon() and error() themselves, as only they
-// know how a sign-in went.
-//
-// Every sound is gated on payload.desktop.sounds (Styles.<style>.Sounds in
-// configs/shared/desktop.lua) and is safe to ask for anywhere: with no AudioContext it is silence.
+import { useQuickSettings } from '@/store/quickSettings';
+import { useAudio } from '@/store/audio';
 import { useOS, type Toast } from '@/store/os';
 
-/** Everything is this far under full volume: system sounds sit well below the game's own. */
 const MASTER = 0.12;
 
 let ctx: AudioContext | null = null;
 let out: GainNode | null = null;
 let hiss: AudioBuffer | null = null;
 
+const outputVolume = (): number => {
+  const { volume, muted } = useAudio.getState();
+  return muted ? 0 : MASTER * volume / 100;
+};
+
 const audio = (): AudioContext | null => {
   try {
     if (!ctx) {
       ctx = new AudioContext();
       out = ctx.createGain();
-      out.gain.value = MASTER;
+      out.gain.value = outputVolume();
       out.connect(ctx.destination);
-      // Half a second of white noise, looped, for anything made of air.
+
       hiss = ctx.createBuffer(1, Math.floor(ctx.sampleRate / 2), ctx.sampleRate);
       const data = hiss.getChannelData(0);
       for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
@@ -41,16 +34,15 @@ const audio = (): AudioContext | null => {
 
 interface Tone {
   type?: OscillatorType;
-  /** Loudness: 1 is as loud as anything gets. */
+
   gain?: number;
-  /** A pitch to slide to, and how long the slide takes (the whole note unless said). */
+
   to?: number;
   slide?: number;
-  /** Seconds to full loudness: short for something struck, long for something that swells. */
+
   attack?: number;
 }
 
-/** One note: it comes up, then dies away. */
 const note = (freq: number, at: number, dur: number, o: Tone = {}): void => {
   const a = audio();
   if (!a || !out) return;
@@ -68,11 +60,10 @@ const note = (freq: number, at: number, dur: number, o: Tone = {}): void => {
     osc.start(t0);
     osc.stop(t0 + dur + 0.05);
   } catch {
-    /* silence */
+
   }
 };
 
-/** A breath of noise through a narrow filter, which can sweep: a tap when short, a whoosh when long. */
 const air = (freq: number, at: number, dur: number, o: { gain?: number; to?: number; q?: number } = {}): void => {
   const a = audio();
   if (!a || !out || !hiss) return;
@@ -94,17 +85,16 @@ const air = (freq: number, at: number, dur: number, o: { gain?: number; to?: num
     src.start(t0);
     src.stop(t0 + dur + 0.05);
   } catch {
-    /* silence */
+
   }
 };
 
 type Cue = 'click' | 'open' | 'close' | 'minimize' | 'restore' | 'maximize' | 'notify' | 'boot' | 'logon' | 'logoff' | 'error';
 type Voice = Record<Cue, () => void>;
 
-/** SD OS Pro: glass. */
 const modern: Voice = {
   click: () => note(1320, 0, 0.05, { gain: 0.3, to: 990, attack: 0.002 }),
-  // A fifth up for a window arriving, a fifth down for one leaving.
+
   open: () => {
     note(587.33, 0, 0.16, { gain: 0.42, attack: 0.006 });
     note(880, 0.06, 0.24, { gain: 0.42, attack: 0.006 });
@@ -113,7 +103,7 @@ const modern: Voice = {
     note(783.99, 0, 0.14, { gain: 0.4, attack: 0.006 });
     note(523.25, 0.06, 0.22, { gain: 0.38, attack: 0.006 });
   },
-  // An octave's slide, down to the taskbar and back up from it.
+
   minimize: () => note(698.46, 0, 0.28, { gain: 0.42, to: 349.23, slide: 0.11, attack: 0.008 }),
   restore: () => note(349.23, 0, 0.28, { gain: 0.42, to: 698.46, slide: 0.11, attack: 0.008 }),
   maximize: () => {
@@ -133,7 +123,6 @@ const modern: Voice = {
   },
 };
 
-/** The chord SD OS Harbor starts on: F sharp major, stacked from the bass up, each note with its loudness. */
 const HARBOR_CHORD: [number, number][] = [
   [92.5, 0.5],
   [185, 0.5],
@@ -144,16 +133,15 @@ const HARBOR_CHORD: [number, number][] = [
   [739.99, 0.12],
 ];
 
-/** SD OS Harbor: wood and air. */
 const mac: Voice = {
   click: () => {
     note(460, 0, 0.06, { type: 'triangle', gain: 0.42, to: 320, attack: 0.002 });
     air(2600, 0, 0.014, { gain: 0.5, q: 2 });
   },
-  // A pop: the pitch jumps as the window does.
+
   open: () => note(250, 0, 0.2, { gain: 0.6, to: 640, slide: 0.07, attack: 0.004 }),
   close: () => note(600, 0, 0.2, { gain: 0.52, to: 220, slide: 0.09, attack: 0.004 }),
-  // A whoosh, into the dock and back out of it.
+
   minimize: () => {
     air(2600, 0, 0.3, { gain: 0.85, to: 420, q: 1.4 });
     note(520, 0, 0.28, { gain: 0.16, to: 240, slide: 0.2 });
@@ -166,7 +154,7 @@ const mac: Voice = {
     air(600, 0, 0.2, { gain: 0.7, to: 3000, q: 1.4 });
     note(330, 0.02, 0.2, { gain: 0.4, to: 700, slide: 0.07, attack: 0.004 });
   },
-  // A struck glass: the note and two of its overtones, each dying sooner than the one under it.
+
   notify: () => {
     note(1174.66, 0, 1.1, { gain: 0.5, attack: 0.003 });
     note(1760, 0, 0.8, { gain: 0.28, attack: 0.003 });
@@ -191,8 +179,9 @@ const last: Partial<Record<Cue, number>> = {};
 
 const play = (cue: Cue): void => {
   const p = useOS.getState().payload;
-  if (!p || p.desktop.sounds === false || p.computer.style === 'retro') return;
-  // The same sound asked for twice in one breath is one sound (two windows opened by one click).
+  if (cue === 'notify' && useQuickSettings.getState().tiles.focus) return;
+  if (outputVolume() === 0 || !p || p.desktop.sounds === false || p.computer.style === 'retro') return;
+
   const now = performance.now();
   if (now - (last[cue] ?? -1000) < 40) return;
   last[cue] = now;
@@ -200,33 +189,28 @@ const play = (cue: Cue): void => {
 };
 
 export const sfx = {
-  /** Signed in. */
+
   logon: (): void => play('logon'),
-  /** A sign-in refused (or a custom app asking for its error sound). */
+
   error: (): void => play('error'),
-  /** A notification's sound, without a notification (a custom app asked for it). */
+
   notify: (): void => play('notify'),
-  /** A press, for something a custom app draws that is not a button of the OS's. */
+
   click: (): void => play('click'),
 };
 
-/**
- * What a press makes a sound on: anything that is a button, in the shell or in an app. Something
- * pressed that is not one in the markup (a dock icon, a notification) says so with data-sfx="press".
- */
 const PRESSABLE =
   'button, a[href], summary, select, input[type="checkbox"], input[type="radio"], [role="button"], [role="menuitem"], [role="tab"], [role="option"], [role="switch"], [role="checkbox"], [role="radio"], [data-sfx="press"]';
-/** Programs that are a world of their own, and not the system's to make noise in: the games and the hacks. */
+
 const QUIET = '.game, [data-sfx="off"]';
 
 const newest = (toasts: Toast[]): number => (toasts.length ? toasts[toasts.length - 1].id : 0);
 
-/**
- * Give the computer under `root` its system sounds, until the function returned is called. Mounted
- * once by the machine (os/Computer.tsx), whatever the look: in retro every sound here is silence.
- */
 export function wireSounds(root: HTMLElement): () => void {
-  // Mounted after the payload came in, so a computer that starts on its boot screen is on it already.
+  const stopAudio = useAudio.subscribe(() => {
+    if (ctx && out) out.gain.setTargetAtTime(outputVolume(), ctx.currentTime, 0.015);
+  });
+
   if (useOS.getState().phase === 'boot') play('boot');
 
   const stop = useOS.subscribe((s, prev) => {
@@ -237,7 +221,6 @@ export function wireSounds(root: HTMLElement): () => void {
 
     if (newest(s.toasts) > newest(prev.toasts)) play('notify');
 
-    // Windows that only went away with a session (sign out, a new payload) make no sound of their own.
     if (s.windows === prev.windows || s.payload !== prev.payload) return;
     const before = new Map(prev.windows.map(w => [w.id, w]));
     for (const w of s.windows) {
@@ -249,7 +232,6 @@ export function wireSounds(root: HTMLElement): () => void {
     }
   });
 
-  // On the press, not the release: that is when a real button makes its sound.
   const press = (e: PointerEvent) => {
     if (e.button !== 0 || !(e.target instanceof Element)) return;
     const el = e.target.closest(PRESSABLE);
@@ -260,6 +242,7 @@ export function wireSounds(root: HTMLElement): () => void {
 
   return () => {
     stop();
+    stopAudio();
     root.removeEventListener('pointerdown', press, true);
   };
 }
